@@ -16,7 +16,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3  # Updated to v3
+      - uses: actions/checkout@v3
 
       - name: Declare short commit variable
         id: vars
@@ -30,7 +30,7 @@ jobs:
 
       - name: Download WinDivert from cache
         id: windivert-cache
-        uses: actions/cache@v3  # Updated to v3
+        uses: actions/cache@v3
         with:
           path: ${{ env.WINDIVERT_NAME }}
           key: ${{ env.WINDIVERT_SHA256 }}
@@ -54,11 +54,27 @@ jobs:
           mkdir goodbyedpi_x86_64_${{ env.sha_short }}
           cp src/goodbyedpi.exe ${{ env.WINDIVERT_BASENAME }}/x64/*.{dll,sys} goodbyedpi_x86_64_${{ env.sha_short }}
 
-      - name: Upload output file x86_64
-        uses: actions/upload-artifact@v4  # Updated to v4
+      # Create and upload release for x86_64
+      - name: Create Release x86_64
+        id: create_release_x64
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: goodbyedpi_x86_64_${{ env.sha_short }}
-          path: goodbyedpi_x86_64_${{ env.sha_short }}
+          tag_name: ${{ env.sha_short }}-x64
+          release_name: Release ${{ env.sha_short }} x86_64
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset x86_64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release_x64.outputs.upload_url }}
+          asset_path: ./goodbyedpi_x86_64_${{ env.sha_short }}
+          asset_name: goodbyedpi_x86_64_${{ env.sha_short }}.zip
+          asset_content_type: application/zip
 
       - name: Compile i686
         run: |
@@ -70,8 +86,24 @@ jobs:
           mkdir goodbyedpi_x86_${{ env.sha_short }}
           cp src/goodbyedpi.exe ${{ env.WINDIVERT_BASENAME }}/x86/*.{dll,sys} goodbyedpi_x86_${{ env.sha_short }}
 
-      - name: Upload output file x86
-        uses: actions/upload-artifact@v4  # Updated to v4
+      # Create and upload release for i686
+      - name: Create Release x86
+        id: create_release_x86
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: goodbyedpi_x86_${{ env.sha_short }}
-          path: goodbyedpi_x86_${{ env.sha_short }}
+          tag_name: ${{ env.sha_short }}-x86
+          release_name: Release ${{ env.sha_short }} x86
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset x86
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release_x86.outputs.upload_url }}
+          asset_path: ./goodbyedpi_x86_${{ env.sha_short }}
+          asset_name: goodbyedpi_x86_${{ env.sha_short }}.zip
+          asset_content_type: application/zip
